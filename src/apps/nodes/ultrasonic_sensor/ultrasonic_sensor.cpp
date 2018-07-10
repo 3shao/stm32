@@ -30,6 +30,8 @@ void ultrasonicLoop()
         ultrasonic_pub->publish(msg);
     }
     LOG("Publish");
+    //udp_printf("publish ultrasonic\n");
+
 }
 
 void ultrasonic_sensor(void* params)

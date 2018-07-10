@@ -23,6 +23,8 @@ void* os_malloc(unsigned int size)
 #define TERMINAL_QUEUE_TIMEOUT 10
 
 xQueueHandle terminalQueue;
+xQueueHandle tcpTerminalQueue;
+
 
 //#define USART_TERMINAL 1
 
@@ -80,15 +82,53 @@ void TerminalTask(void* params)
 }
 #endif // USART_TERMINAL
 
+
+void TcpTerminalTask(void* params){
+    tcpTerminalQueue = xQueueCreate(TERMINAL_QUEUE_LEN, MAX_CHARS);
+    char msg[MAX_CHARS];
+    struct netconn* conn = netconn_new( NETCONN_TCP );
+    netconn_bind(conn, IP_ADDR_ANY, TCP_LOCAL_PORT);
+    struct ip_addr ip;
+    err_t err;
+    ip.addr = inet_addr(TCP_REMOTE_IP);
+
+    for(;;)
+    {
+        if (xQueueReceive(tcpTerminalQueue, &msg, TERMINAL_QUEUE_TIMEOUT))
+        {
+            err = netconn_connect(conn, &ip, TCP_REMOTE_PORT);
+            if(err == ERR_OK){
+                struct netbuf *buf = netbuf_new();
+                char * data = netbuf_alloc(buf, sizeof(msg)); // Also deallocated with netbuf_delete(buf)
+                if (data != NULL)
+                {
+                    memcpy (data, msg, sizeof (msg));
+                    netconn_send(conn, buf);
+                    netbuf_delete(buf); // Deallocate packet buffer
+                }
+                else
+                    os_printf("Netbuf_alloc: Cannot allocate memory!\n");
+
+                netconn_close (conn );
+            }
+
+
+        }
+
+    }
+
+
+}
+
 #include "USARTHandler.h"
 void os_printf(const char* fmt, ...)
 {
-    va_list ap;
-    char string[MAX_CHARS];
+//    va_list ap;
+//    char string[MAX_CHARS];
 
-    va_start(ap, fmt);
-    vsprintf(string, fmt, ap);
-    va_end(ap);
+//    va_start(ap, fmt);
+//    vsprintf(string, fmt, ap);
+//    va_end(ap);
 #ifdef USART_TERMINAL
     if (strlen(string) > 2 && strlen(string) < 128 && string[strlen(string)-1] == '\n' && string[strlen(string)-2] != '\r')
     {
@@ -97,15 +137,45 @@ void os_printf(const char* fmt, ...)
     }
 #endif// USART_TERMINAL
 
-    if (terminalQueue != NULL)
-    {
-    	xQueueSend(terminalQueue, &string, 0);
-    }
+//    if (terminalQueue != NULL)
+//    {
+//    	xQueueSend(terminalQueue, &string, 0);
+//    }
     /*
     taskDISABLE_INTERRUPTS();
     USART_puts(USART1, (volatile char*)string);
     taskENABLE_INTERRUPTS();*/
     //tr_log(string);
+}
+
+void udp_printf(const char* fmt, ...)
+{
+    va_list ap;
+    char string[MAX_CHARS];
+
+    va_start(ap, fmt);
+    vsprintf(string, fmt, ap);
+    va_end(ap);
+
+    if (terminalQueue != NULL)
+    {
+        xQueueSend(terminalQueue, &string, 0);
+    }
+}
+
+void tcp_printf(const char* fmt, ...)
+{
+    va_list ap;
+    char string[MAX_CHARS];
+
+    va_start(ap, fmt);
+    vsprintf(string, fmt, ap);
+    va_end(ap);
+
+    if (tcpTerminalQueue != NULL)
+    {
+        xQueueSend(tcpTerminalQueue, &string, 0);
+    }
 }
 
 

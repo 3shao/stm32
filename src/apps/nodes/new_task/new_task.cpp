@@ -19,6 +19,8 @@ void newLoop()
     Int32 msg;
     msg.data = counter++;
     new_pub->publish(msg);
+    os_printf("publish new task\n");
+
 }
 
 void new_task(void* p)

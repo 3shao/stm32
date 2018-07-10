@@ -7,6 +7,8 @@
 #include "semphr.h"
 
 void os_printf(const char* fmt, ...);
+void udp_printf(const char* fmt, ...);
+void tcp_printf(const char* fmt, ...);
 void* os_malloc(unsigned int size);
 
 

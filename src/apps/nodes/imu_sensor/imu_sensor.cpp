@@ -6,13 +6,13 @@
 #include "Subscriber.h"
 #include "MPU6050/MPU6050.h"
 #include "sensor_msgs/Imu.h"
-
 // Period in milliseconds
-#define PUBLISH_PERIOD 100
+#define PUBLISH_PERIOD 10
 
 using namespace sensor_msgs;
 using namespace ros;
 Publisher* imu_pub;
+
 
 void imuLoop()
 {
@@ -22,15 +22,18 @@ void imuLoop()
 
 	Imu msg;
 
-	msg.linear_acceleration.x = data.x_accel;
-	msg.linear_acceleration.y = data.y_accel;
-	msg.linear_acceleration.z = data.z_accel;
+    msg.linear_acceleration.x = data.x_accel;
+    msg.linear_acceleration.y = data.y_accel;
+    msg.linear_acceleration.z = data.z_accel;
 
-	msg.angular_velocity.x = data.x_gyro;
-	msg.angular_velocity.y = data.y_gyro;
-	msg.angular_velocity.z = data.z_gyro;
+    msg.angular_velocity.x = data.x_gyro;
+    msg.angular_velocity.y = data.y_gyro;
+    msg.angular_velocity.z = data.z_gyro;
+
 
 	imu_pub->publish(msg);
+    udp_printf("publish imu : %d\n", micros());
+
 }
 
 void imu_sensor(void* p)
@@ -39,6 +42,7 @@ void imu_sensor(void* p)
 	Node* n = new Node("imu_sensor_"ROS_NODE_UNIQUE_ID);
 	imu_pub = new Publisher;
 	imu_pub->advertise<Imu>(n, "imu");
+
 
 	// Initialize sensor.
 	MPU6050::init();

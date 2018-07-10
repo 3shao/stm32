@@ -17,9 +17,10 @@ typedef struct node_descriptor {
 
 node_decriptor nodes[] = {
         {"ultrasonic_sensor", ultrasonic_sensor, 50},
-        {"imu_sensor", imu_sensor, 100},
-        {"new_task", new_task, 15},
-        {"speed_setter", speed_setter, 40}
+        {"imu_sensor", imu_sensor, 50},
+        //{"new_task", new_task, 15},
+        {"speed_setter", speed_setter, 40},
+        {"logger",logger,100}
 };
 
 #endif /* ASW_APPS_APPLICATION_TASKS_H_ */

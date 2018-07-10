@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "device_config.h"
 #define XMLRPC_PORT 40000
+// Version id
 
 static const char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 	                                'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -53,25 +54,25 @@ protected:
 	{
 		if (data != NULL)
 		{
-			strcpy(data, "POST / HTTP/1.1\nUser-Agent: curl/7.35.0\nHost: ");
+            strcpy(data, "POST / HTTP/1.1\nUser-Agent: curl/7.47.0\nHost: ");
 			strcat(data, hostURI);
-			strcat(data, "\\Accept: */*\nContent-Length: ");
-			char contentLen[16];
-			sprintf(contentLen, "%d", contentLength);
-			strcat(data, contentLen);
-			strcat(data, "\nContent-Type: application/x-www-form-urlencoded\n\n");
+            strcat(data, "\\Accept: */*\nContent-Length: ");
+            char contentLen[16];
+            sprintf(contentLen, "%d", contentLength);
+            strcat(data, contentLen);
+            strcat(data, "\nContent-Type: application/x-www-form-urlencoded\n\n");
 		}
 	}
 	static void createResponseHeader(int contentLength, char* data)
 	{
 		if (data != NULL)
 		{
-    		strcpy(data, "HTTP/1.0 200 OK\nServer: BaseHTTP/0.3 Python/2.7.6\n");
-    		strcat(data, "Date: Sat, 01 January 1970 00:00:00 GMT\nContent-type: text/xml\nContent-length: ");
+            strcpy(data, "HTTP/1.0 200 OK\nServer: BaseHTTP/0.3 Python/2.7.12\n");
+            strcat(data, "Date: Sat, 01 January 1970 00:00:00 GMT\nContent-type: text/xml\nContent-length: ");
             char contentLen[16];
     		sprintf(contentLen, "%d", contentLength);
     		strcat(data, contentLen);
-    		strcat(data, "\n\n");
+            strcat(data, "\n\n");
 		}
 	}
 

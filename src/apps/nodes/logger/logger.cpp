@@ -45,6 +45,6 @@ void logger(void* params)
     logger_pub = new ros::Publisher;
     logger_pub->advertise<String>(n, "logger");
 
-    spinLoop(loggerLoop, 10000);
+    spinLoop(loggerLoop, 100);
     // Code never reaches here, deleting allocated memory is not necessary.
 }

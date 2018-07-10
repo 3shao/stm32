@@ -51,6 +51,7 @@ private:
             if (conn!=NULL) {
                 // Bind connection to the specified number
                 os_printf("Binding port %d\n", port);
+                udp_printf("Binding port %d\n", port);
                 err = netconn_bind(conn, NULL, port);
 
                   if (err == ERR_OK)
@@ -58,12 +59,14 @@ private:
                       struct ip_addr ip;
                       ip.addr = tcpData.serverIP;
                       os_printf("Connecting port %d\n", tcpData.serverPort);
+                      udp_printf("Connecting port %d\n", tcpData.serverPort);
                       err = netconn_connect (conn, &ip, tcpData.serverPort);
 
                       if (err == ERR_OK)
                       {
                           os_printf("Writing data!\n");
                           netconn_write(conn, tcpData.data, TCP_DATA_SIZE, NETCONN_COPY);
+                          udp_printf(tcpData.data);
 
                               struct netbuf *buf;
                               char *data;
@@ -113,6 +116,7 @@ private:
     void onReceive(void(*receiveCallback)(const void* obj, const char* data), void* obj, const char* data)
     {
         os_printf("Received %d bytes!\n", strlen(data));
+        udp_printf("Received %d bytes!\n", strlen(data));
         if (receiveCallback != NULL)
         {
             if (obj != NULL)
@@ -294,13 +298,16 @@ void XMLRPCServer::UDPSend(void* params)
     static uint8_t counter = 1;
 
     pinMode(GPIO_PD11, OUTPUT);
+    //pinMode(GPIO_PD13, OUTPUT);
     UDPMessage msg;
     struct ip_addr ip;
     ip.addr = inet_addr(ROS_MASTER_IP);
     for(;;)
     {
         //digitalWrite(GPIO_PD11, HIGH);
-        digitalWrite(GPIO_PD11, pin3);
+       // digitalWrite(GPIO_PD11, pin3);
+        //digitalWrite(GPIO_PD13, pin3);
+       // vTaskDelay(250);
         uh->dequeueMessage(&msg);
         //digitalWrite(GPIO_PD11, LOW);
 
@@ -321,10 +328,12 @@ void XMLRPCServer::UDPSend(void* params)
                 for(int i= 0; i<MAX_UDP_CONNECTIONS; i++)
                 {
                     const UDPConnection* connection = connections[i];
+
                     if (connection && connection->isValid())
                     {
                         err_t err = netconn_connect(conn, &ip, connection->getPort());
                         //os_printf("1Port: %d LWIP Error:%d\n", endpoint.port, err);
+
 
                         os_printf("Connecting %s:%d, err:%d\n", ip, connection->getPort(), err);
                         struct netbuf *buf = netbuf_new();
@@ -345,14 +354,18 @@ void XMLRPCServer::UDPSend(void* params)
                         else
                         {
                             os_printf("XMLRPCServer::UDPSend data is NULL!\n");
+
                         }
 
                         err = netconn_send(conn, buf);
                         //os_printf("2Port: %d LWIP Error:%d\n", endpoint.port, err);
 
                         netbuf_delete(buf);
+                    }else{
+                        os_printf("XMLRPCServer::UDPSend connection is NULL!\n");
                     }
                 }
+
             }
         }
         pin3 = !pin3;
@@ -433,6 +446,7 @@ TopicReader* XMLRPCServer::getTopicReader(const uint32_t connectionID)
 void XMLRPCServer::XMLRPCServerReceiveCallback(const char* data, char* buffer)
 {
     os_printf("Receive callback, buffer addr: %08x!\n", buffer);
+    udp_printf("Receive callback, buffer addr: %08x!\n", buffer);
 
     char methodName[48];
     {
@@ -450,12 +464,19 @@ void XMLRPCServer::XMLRPCServerReceiveCallback(const char* data, char* buffer)
 
     os_printf("Strlen:%d\n",strlen(data));
 
+    udp_printf("name:%s\n",methodName);
+    udp_printf("Strlen:%d\n",strlen(data));
+    udp_printf(data);
+
+
+
+
     if (!strcmp(methodName, "requestTopic"))
     {
         char* pos = strstr(data, "<i4>");
-
         char* pos2 = strstr(data, "</i4>");
         os_printf("pos:%d, pos2:%d\n", pos, pos2);
+        udp_printf("pos:%d, pos2:%d\n", pos, pos2);
 
         if (pos < pos2)
         {
@@ -464,6 +485,8 @@ void XMLRPCServer::XMLRPCServerReceiveCallback(const char* data, char* buffer)
             portStr[pos2-pos-4] = 0;
             uint16_t port = atoi(portStr);
             os_printf("Port: %d\n",port);
+            udp_printf("Port: %d\n",port);
+
 
             char* pos3 = strstr((char*)data, "</value></param><param><value>/");
             char* pos4;
@@ -478,6 +501,8 @@ void XMLRPCServer::XMLRPCServerReceiveCallback(const char* data, char* buffer)
                     strncpy (topic, pos3+len, pos4-pos3-len);
                     topic[pos4-pos3-len] = 0;
                     os_printf("topic: %s\n", topic);
+                    udp_printf("topic: %s\n", topic);
+
 
                     // TODO: Move UDPConnection to registerPublishers. Then extract topic name from data. Afterwards, find the corresponding connection.
                     TopicWriter* tw = getTopicWriter(topic);
@@ -493,11 +518,15 @@ void XMLRPCServer::XMLRPCServerReceiveCallback(const char* data, char* buffer)
                     }
                 }
             }
+        }else{
+            udp_printf("error xml parse\n");
         }
     }
     else if (!strcmp(methodName, "publisherUpdate"))
     {
         os_printf("Publisher Update!\n");
+        udp_printf("Publisher Update!\n");
+
         char* pos = strstr(data, "<value><string>/master</string></value>");
         if (pos != 0)
         {

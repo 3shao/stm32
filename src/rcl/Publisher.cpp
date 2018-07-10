@@ -47,6 +47,8 @@ void Publisher::publish(const Msg& msg)
 {
 	tw->publishMsg(msg);
 	//digitalWrite(GPIO_PD11, HIGH);
+    //digitalWrite(GPIO_PD13, HIGH);
+
 }
 
 }

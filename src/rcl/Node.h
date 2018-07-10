@@ -1,6 +1,8 @@
 #ifndef NODE_H_
 #define NODE_H_
 extern "C" void os_printf(const char* fmt, ...);
+extern "C" void udp_printf(const char* fmt, ...);
+extern "C" void tcp_printf(const char* fmt, ...);
 namespace ros {
 
 class Node {
